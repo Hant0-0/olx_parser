@@ -1,0 +1,19 @@
+FROM debian:latest
+
+RUN apt-get update && apt-get install -y \
+    cron \
+    tzdata \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Europe/Kiev
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+WORKDIR /app/
+COPY ./backup.sh /app/backup.sh
+
+RUN chmod +x /app/backup.sh
+
+RUN echo "0 12 * * * /app/backup.sh >> /var/log/cron.log 2>&1" | crontab -
+
+CMD ["cron", "-f"]
